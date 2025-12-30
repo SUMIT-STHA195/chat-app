@@ -35,7 +35,7 @@ def register(request):
             )
             user.save()
             messages.info(request, 'Registration Successful')
-            return redirect(reverse('login'))
+            return redirect(reverse('authentication:login'))
     return render(request, 'authentication/register.html')
 
 
@@ -53,13 +53,13 @@ def login_view(request):
             return redirect('chat:index')
         else:
             messages.error(request, 'Wrong username or password')
-            return redirect('login')
+            return redirect('authentication:login')
     return render(request, 'authentication/login.html')
 
 
 def logout_page(request):
     logout(request)
-    return redirect('login')
+    return redirect('authentication:login')
 
 
 @login_required
@@ -76,5 +76,5 @@ def change_password(request):
             return redirect('login')
         else:
             messages.warning(request, 'Password must be same')
-            return redirect('change-password')
+            return redirect('authentication:change-password')
     return render(request, 'authentication/change-password.html')

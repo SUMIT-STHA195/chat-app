@@ -82,6 +82,9 @@
 
             <div class="chat-header">
                 💬 Room: {{ room_name }}
+                {% if is_admin %}
+                <a href="{% url 'chat:add-members' room_name%}"> Add</a>
+                {% endif %}
             </div>
 
             <div id="chat-log" class="chat-body"></div>
@@ -104,7 +107,7 @@
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
         console.log(roomName);
-        
+
         const chatHistory = JSON.parse(document.getElementById('chat-history').textContent);
         const currentUser = JSON.parse(document.getElementById('current-user').textContent);
         const chatLog = document.getElementById('chat-log');
@@ -148,7 +151,7 @@
         document.getElementById('chat-message-submit').onclick = function () {
             const message = messageInput.value.trim();
             console.log(message);
-            
+
             if (message !== "") {
                 chatSocket.send(JSON.stringify({ message: message }));
                 messageInput.value = "";
@@ -156,6 +159,7 @@
         };
     </script>
 </body>
+
 </html>
 
 <!-- 

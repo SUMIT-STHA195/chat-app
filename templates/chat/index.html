@@ -37,14 +37,17 @@
 
 <body>
     <div class="container chat-container">
+        <h2 class="mb-4 text-center">Chat-App</h2>
         <h2 class="mb-4 text-center">Welcome, {{request.user.first_name}}</h2>
-        <h2 class="mb-4 text-center">Choose a Chat Room</h2>
 
         <div class="mb-4">
-            <label for="room-name-input" class="form-label">Enter Chat Room Name:</label>
+            <!-- <label for="room-name-input" class="form-label">Enter Chat Room Name:</label>
             <div class="input-group">
                 <input id="room-name-input" type="text" class="form-control" placeholder="Room name">
                 <button id="room-name-submit" class="btn btn-primary">Enter</button>
+            </div> -->
+            <div class="mt-2">
+                <a href="{% url 'authentication:logout' %}" class="btn btn-success btn-sm">logout</a>
             </div>
             <div class="mt-2">
                 <a href="{% url 'chat:create-room' %}" class="btn btn-success btn-sm">Create New Room</a>
@@ -95,7 +98,7 @@
         </div>
 
     </div>
-
+    <!-- 
     <script>
         document.querySelector('#room-name-input').focus();
 
@@ -111,7 +114,7 @@
                 window.location.pathname = '/chat/room-detail/' + roomName + '/';
             }
         };
-    </script>
+    </script> -->
 </body>
 
 </html>

@@ -10,11 +10,6 @@ from zoneinfo import ZoneInfo
 
 @login_required
 def index(request):
-    # room=Room.objects.all()   # print(context.sender.username)
-    # print("CHAT MESSAGE CALLED:", message)
-    # print(user)
-    # print(user)
-
     group = Room.objects.filter(is_group=True,
                                 members=request.user)
     unconnected_user = []
@@ -55,6 +50,7 @@ def create_room(request):
             room = Room.objects.create(
                 room_name=room_name,
                 is_group=True,
+                admin=user,
             )
             room.members.add(user)
             room.save()
@@ -98,12 +94,33 @@ def room(request, room_name):
         }
         for msg in message_history
     ]
+    is_admin = False
+    if room.admin == request.user:
+        is_admin = True
 
     # print(message_history_context)
     if room.is_group:
-        room.members.add(request.user)
-        return render(request, 'chat/room.html', {'room_name': room_name, 'chat_history': message_history_context})
+        return render(request, 'chat/room.html', {'room_name': room_name, 'chat_history': message_history_context, 'is_admin': is_admin})
     else:
         if room.members.contains(request.user):
             return render(request, 'chat/room.html', {'room_name': room_name, 'chat_history': message_history_context})
         return HttpResponse('Not accessed')
+
+
+@login_required
+def add_members(request, room_name):
+    room = get_object_or_404(Room, room_name=room_name)
+    users = User.objects.exclude(id__in=[x.id for x in room.members.all()])
+
+    if request.user == room.admin:
+        if request.method == 'POST':
+            selected_user = request.POST.getlist('users')
+            print(selected_user)
+            users_to_add = User.objects.filter(id__in=selected_user)
+            print(users_to_add)
+            room.members.add(*users_to_add)
+            return redirect('chat:room', room_name=room_name)
+    else:
+        return HttpResponse('Page not found')
+
+    return render(request, 'chat/add-members.html', {'room_name': room_name, 'users': users})
