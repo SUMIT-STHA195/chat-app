@@ -20,6 +20,17 @@ class Message(models.Model):
 
     class Meta:
         ordering=['timestamp']
+
+class Notification(models.Model):
+    message=models.ForeignKey(Message,on_delete=models.CASCADE)
+    recipient=models.ForeignKey(User,on_delete=models.CASCADE,null=True,blank=True)
+    is_read=models.BooleanField(default=False)
+    timestamp=models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering=['timestamp']
+
+
     
     
 

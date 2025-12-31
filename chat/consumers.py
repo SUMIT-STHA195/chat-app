@@ -76,3 +76,4 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         message.save()
         return message
+    
