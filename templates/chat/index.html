@@ -4,95 +4,131 @@
 <head>
     <meta charset="utf-8" />
     <title>Chat Rooms</title>
-
-    <!-- Bootstrap 5 CDN -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        #notification-toast-container {
+            z-index: 1060;
+        }
+
+        .notif-bell-wrapper {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .notif-bell-wrapper:hover {
+            transform: scale(1.1);
+        }
+
+        .dropdown-menu {
+            min-width: 320px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .very-small {
+            font-size: 0.75rem;
+        }
+
+        .badge-notif {
+            font-size: 0.7rem;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
+
+    <div id="notification-toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"></div>
 
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
 
-                <!-- Header -->
                 <div class="text-center mb-4">
                     <h2 class="fw-bold">Chat App</h2>
                     <p class="text-muted mb-1">Welcome, {{ request.user.first_name }}</p>
 
-                    <div class="d-flex justify-content-center gap-2 mt-3">
-                        <a href="{% url 'chat:create-room' %}" class="btn btn-primary btn-sm">
-                            + Create Room
-                        </a>
-                        <a href="{% url 'authentication:logout' %}" class="btn btn-outline-danger btn-sm">
-                            Logout
-                        </a>
+                    <div class="d-flex justify-content-center align-items-center gap-3 mt-3">
+                        <div class="dropdown">
+                            <div class="notif-bell-wrapper position-relative" id="notifDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-bell-fill fs-4 text-primary"></i>
+                                <span id="notif-badge"
+                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                    0
+                                </span>
+                            </div>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notifDropdown">
+                                <li>
+                                    <h6 class="dropdown-header border-bottom pb-2">Notifications</h6>
+                                </li>
+                                <div id="notification-items">
+                                    <li><span class="dropdown-item text-muted text-center py-3">No new
+                                            notifications</span></li>
+                                </div>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item text-center small text-primary" id="mark-all-read"
+                                        href="#">Mark all as read</a></li>
+                            </ul>
+                        </div>
+
+                        <a href="{% url 'chat:create-room' %}" class="btn btn-primary btn-sm">+ Create Room</a>
+                        <a href="{% url 'authentication:logout' %}" class="btn btn-outline-danger btn-sm">Logout</a>
                     </div>
                 </div>
 
-                <!-- Group Chats -->
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header fw-semibold">
-                        Group Chats
-                    </div>
+                    <div class="card-header fw-semibold">Group Chats</div>
                     <div class="list-group list-group-flush">
                         {% if rooms %}
                         {% for room in rooms %}
-                        {% if room.is_group %}
                         <a href="{% url 'chat:room' room.room_name %}"
                             class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             {{ room.room_name }}
-                            <span class="badge bg-primary">Group</span>
+                            <div>
+                                <span class="badge bg-primary">Group</span>
+                                <span id="count-group-{{ room.room_name }}"
+                                    class="badge rounded-pill bg-danger badge-notif d-none">0</span>
+                            </div>
                         </a>
-                        {% endif %}
                         {% endfor %}
-                        {% else %}
-                        <div class="list-group-item text-muted text-center">
-                            Not engaged in any rooms
-                        </div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Private Chats -->
                 <div class="card shadow-sm mb-4">
-                    <div class="card-header fw-semibold">
-                        Private Chats
-                    </div>
+                    <div class="card-header fw-semibold">Private Chats</div>
                     <div class="list-group list-group-flush">
                         {% if connected_user %}
                         {% for priv_obj in connected_user %}
                         <a href="{% url 'chat:private-room' priv_obj.username %}"
                             class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             {{ priv_obj.first_name }}
-                            <span class="badge bg-success">Private</span>
+                            <div>
+                                <span class="badge bg-success">Private</span>
+                                <span id="count-{{ priv_obj.username }}"
+                                    class="badge rounded-pill bg-danger badge-notif d-none">0</span>
+                            </div>
                         </a>
                         {% endfor %}
-                        {% else %}
-                        <div class="list-group-item text-muted text-center">
-                            Not connected with any user
-                        </div>
                         {% endif %}
                     </div>
                 </div>
 
-                <!-- Users -->
                 <div class="card shadow-sm">
-                    <div class="card-header fw-semibold">
-                        Users
-                    </div>
+                    <div class="card-header fw-semibold">Available Users</div>
                     <div class="list-group list-group-flush">
                         {% if unconnected_user %}
                         {% for priv_obj in unconnected_user %}
                         <a href="{% url 'chat:private-room' priv_obj.username %}"
                             class="list-group-item list-group-item-action">
                             {{ priv_obj.first_name }}
+                            <span class="text-muted very-small ms-2">@{{ priv_obj.username }}</span>
                         </a>
                         {% endfor %}
-                        {% else %}
-                        <div class="list-group-item text-muted text-center">
-                            Already connected with all users
-                        </div>
                         {% endif %}
                     </div>
                 </div>
@@ -101,6 +137,97 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const notificationSocket = new WebSocket('ws://' + window.location.host + '/ws/notify/');
+
+        notificationSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+
+            // Check if the source is the Signal (live) or the Consumer's connect method (initial)
+            const isLive = (data.type === 'send_notification');
+            const notifications = data.notification_context;
+
+            // Loop through the notifications (works for both 1 live message or a list of missed ones)
+            if (Array.isArray(notifications)) {
+                notifications.forEach(notif => {
+                    renderNotification(notif, !isLive);
+                });
+            }
+        };
+
+        function renderNotification(notif, isInitialLoad) {
+            // 1. Update Bell Badge
+            const bellBadge = document.getElementById('notif-badge');
+            let currentTotal = parseInt(bellBadge.innerText) || 0;
+            bellBadge.innerText = currentTotal + 1;
+            bellBadge.classList.remove('d-none');
+
+            // 2. Update Dropdown List
+            const notifContainer = document.getElementById('notification-items');
+            if (currentTotal === 0) notifContainer.innerHTML = '';
+
+            const displayTitle = notif.is_group ? `[Group: ${notif.group_name}]` : `Private Message`;
+            const newNotif = `
+                <li>
+                    <a class="dropdown-item border-bottom py-2" href="/chat/room-detail/${notif.group_name}/">
+                        <div class="fw-bold small text-primary">${displayTitle}</div>
+                        <div class="small">${notif.message}</div>
+                        <div class="very-small text-muted mt-1">${isInitialLoad ? 'Previous' : 'Just now'}</div>
+                    </a>
+                </li>`;
+            notifContainer.insertAdjacentHTML('afterbegin', newNotif);
+
+            // 3. Update Specific Room Badge
+            let badgeId = notif.is_group ? `count-group-${notif.group_name}` : `count-${notif.sender_username}`;
+            const targetBadge = document.getElementById(badgeId);
+
+            if (targetBadge) {
+                let roomCount = parseInt(targetBadge.innerText) || 0;
+                targetBadge.innerText = roomCount + 1;
+                targetBadge.classList.remove('d-none');
+            }
+
+            // 4. TRIGGER TOAST (Only for LIVE messages)
+            if (!isInitialLoad) {
+                showToast(`${displayTitle}: ${notif.message}`);
+            }
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('notification-toast-container');
+            const id = 'toast-' + Date.now();
+            const html = `
+                <div id="${id}" class="toast show align-items-center text-white bg-primary border-0 mb-2 shadow" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body"><i class="bi bi-chat-left-dots-fill me-2"></i>${msg}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (el) el.remove();
+            }, 5000);
+        }
+
+        // Mark as Read Logic
+        document.getElementById('mark-all-read').addEventListener('click', function (e) {
+            e.preventDefault();
+            notificationSocket.send(JSON.stringify({ 'action': 'mark_read' }));
+
+            // Reset UI
+            document.getElementById('notif-badge').classList.add('d-none');
+            document.getElementById('notif-badge').innerText = "0";
+            document.getElementById('notification-items').innerHTML = '<li><span class="dropdown-item text-muted text-center py-3">No new notifications</span></li>';
+            document.querySelectorAll('.badge-notif').forEach(b => b.classList.add('d-none'));
+        });
+
+        notificationSocket.onclose = function (e) {
+            console.error('Notification socket closed unexpectedly');
+        };
+    </script>
 </body>
 
 </html>
