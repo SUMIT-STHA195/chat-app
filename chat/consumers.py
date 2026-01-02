@@ -16,6 +16,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
         await self.accept()
+        await self.mark_as_read()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -56,6 +57,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         message.save()
         return message
 
+    @database_sync_to_async
+    def mark_as_read(self):
+        room = Room.objects.get(room_name=self.room_name)
+        Notification.objects.filter(
+            recipient_id=self.scope['user'].id,
+            message__room_id=room.id,
+            is_read=False,
+        ).update(is_read=True)
+
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -91,10 +101,10 @@ class NotificationConsumer(AsyncWebsocketConsumer):
     def mark_all_as_read(self):
         Notification.objects.filter(
             recipient=self.user, is_read=False).update(is_read=True)
-    
+
     async def send_notification(self, event):
         await self.send(text_data=json.dumps({
-            'type':'send_notification',
+            'type': 'send_notification',
             'notification_context': event['notification_context'],
         }))
 
