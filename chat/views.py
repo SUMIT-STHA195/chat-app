@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+from authentication.models import CustomUser
 from .models import Room
 from zoneinfo import ZoneInfo
 
@@ -24,7 +25,7 @@ def index(request):
         # print("-----",other_user)
     print("--------", connected_user)
     connected_user_ids = [user.id for user in connected_user]
-    unconnected_user = User.objects.exclude(
+    unconnected_user = CustomUser.objects.exclude(
         id__in=connected_user_ids).exclude(id=request.user.id)
     print('u--------', unconnected_user)
     context = {
@@ -62,7 +63,7 @@ def create_room(request):
 @login_required
 def private_room(request, username):
     user1 = request.user
-    user2 = get_object_or_404(User, username=username)  # safe
+    user2 = get_object_or_404(CustomUser, username=username)  # safe
 
     # deterministic room name
     room_name = "private_"+"_".join(sorted([str(user1.id), str(user2.id)]))
@@ -110,13 +111,14 @@ def room(request, room_name):
 @login_required
 def add_members(request, room_name):
     room = get_object_or_404(Room, room_name=room_name)
-    users = User.objects.exclude(id__in=[x.id for x in room.members.all()])
+    users = CustomUser.objects.exclude(
+        id__in=[x.id for x in room.members.all()])
 
     if request.user == room.admin:
         if request.method == 'POST':
             selected_user = request.POST.getlist('users')
             print(selected_user)
-            users_to_add = User.objects.filter(id__in=selected_user)
+            users_to_add = CustomUser.objects.filter(id__in=selected_user)
             print(users_to_add)
             room.members.add(*users_to_add)
             return redirect('chat:room', room_name=room_name)

@@ -6,7 +6,8 @@ from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
+from authentication.models import CustomUser
 from django.contrib import messages
 
 
@@ -16,9 +17,10 @@ def register(request):
         last_name = request.POST.get('last_name')
         username = request.POST.get('username')
         email = request.POST.get('email')
+        phone = request.POST.get('phone')
         password1 = request.POST.get('password1')
         password2 = request.POST.get('password2')
-        user = User.objects.filter(username=username)
+        user = CustomUser.objects.filter(username=username)
         if user.exists():
             messages.warning(request, 'Username already exists!!!')
             redirect('register')
@@ -26,12 +28,13 @@ def register(request):
             messages.warning(request, 'Password doesnot match!!!')
             redirect('register')
         else:
-            user = User.objects.create_user(
+            user = CustomUser.objects.create_user(
                 username=username,
                 password=password1,
                 first_name=first_name,
                 last_name=last_name,
                 email=email,
+                phone=phone,
             )
             user.save()
             messages.info(request, 'Registration Successful')
@@ -43,7 +46,7 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        if not User.objects.filter(username=username).exists():
+        if not CustomUser.objects.filter(username=username).exists():
             messages.error(request, 'User doesnot exist!!!')
             return redirect(reverse('login'))
         user = authenticate(username=username, password=password)
