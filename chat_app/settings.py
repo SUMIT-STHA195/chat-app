@@ -41,15 +41,34 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'chat',
-
+    'django_q',
 ]
+
+Q_CLUSTER = {
+    'name': 'chat-app',
+    'workers': 2,
+    'timeout': 60,
+    'orm': 'default',
+    'queue_limit': 50,
+    'save_limit': 250
+}
+
 
 ASGI_APPLICATION = 'chat_app.asgi.application'
 
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer'
+#     }
+# }
+
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    }
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
 
 AUTH_USER_MODEL = 'authentication.CustomUser'

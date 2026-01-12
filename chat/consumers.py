@@ -42,9 +42,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def chat_message(self, event):
         context = event['message']
-        await self.send(text_data=json.dumps({"sender": context.sender.username,
-                                              "content": context.content,
-                                              "timestamp": context.timestamp.astimezone(ZoneInfo('Asia/Kathmandu')).strftime("%H:%M")}))
+        # import ipdb
+        # ipdb.set_trace()
+        await self.send(text_data=json.dumps(context))
 
     @database_sync_to_async
     def save_message(self, message, room_name, user):
@@ -56,7 +56,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             sender=user
         )
         message.save()
-        return message
+
+        return {
+            "content": message.content,
+            "sender": message.sender.username,
+            "timestamp": message.timestamp.astimezone(ZoneInfo('Asia/Kathmandu')).strftime("%H:%M")
+        }
 
     @database_sync_to_async
     def mark_as_read(self):
@@ -107,6 +112,12 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'type': 'send_notification',
             'notification_context': event['notification_context'],
+        }))
+
+    async def resend_notification(self, event):
+        await self.send(text_data=json.dumps({
+            'type': 'resend_notification',
+            'reminder_context': event['reminder_context'],
         }))
 
     @database_sync_to_async

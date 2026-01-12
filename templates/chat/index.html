@@ -146,6 +146,9 @@
 
             // Check if the source is the Signal (live) or the Consumer's connect method (initial)
             const isLive = (data.type === 'send_notification');
+            if (data.type === 'resend_notification') {
+                showToast(data.reminder_context.message)
+            }
             const notifications = data.notification_context;
 
             // Loop through the notifications (works for both 1 live message or a list of missed ones)

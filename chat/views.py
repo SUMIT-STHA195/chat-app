@@ -5,36 +5,39 @@ from django.contrib import messages
 from authentication.models import CustomUser
 from .models import Room
 from zoneinfo import ZoneInfo
+# from .schedulers import resend_notification
 
 # Create your views here.
 
 
 @login_required
 def index(request):
-    group = Room.objects.filter(is_group=True,
-                                members=request.user)
-    unconnected_user = []
-    private = Room.objects.filter(is_group=False,
-                                  members=request.user)
-    connected_user = []
-    for mem in private:
-        user = mem.members.exclude(id=request.user.id).first()
-        if user:
-            connected_user.append(user)
+    if request.user.is_authenticated:
+        group = Room.objects.filter(is_group=True,
+                                    members=request.user)
+        unconnected_user = []
+        private = Room.objects.filter(is_group=False,
+                                    members=request.user)
+        connected_user = []
+        for mem in private:
+            user = mem.members.exclude(id=request.user.id).first()
+            if user:
+                connected_user.append(user)
 
-        # print("-----",other_user)
-    print("--------", connected_user)
-    connected_user_ids = [user.id for user in connected_user]
-    unconnected_user = CustomUser.objects.exclude(
-        id__in=connected_user_ids).exclude(id=request.user.id)
-    print('u--------', unconnected_user)
-    context = {
-        'rooms': group,
-        'unconnected_user': unconnected_user,
-        'connected_user': connected_user,
-    }
-
-    return render(request, 'chat/index.html', context)
+            # print("-----",other_user)
+        print("--------", connected_user)
+        connected_user_ids = [user.id for user in connected_user]
+        unconnected_user = CustomUser.objects.exclude(
+            id__in=connected_user_ids).exclude(id=request.user.id)
+        print('u--------', unconnected_user)
+        context = {
+            'rooms': group,
+            'unconnected_user': unconnected_user,
+            'connected_user': connected_user,
+        }
+        # for scheduling notification for unseen notification
+        # resend_notification(request.user.id)
+        return render(request, 'chat/index.html', context)    
 
 
 @login_required
