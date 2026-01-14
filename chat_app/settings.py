@@ -41,17 +41,22 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'channels',
     'chat',
-    'django_q',
+    # 'django_q',
+    # 'django_celery_results',
+    # 'django_celery_beat'
 ]
 
-Q_CLUSTER = {
-    'name': 'chat-app',
-    'workers': 2,
-    'timeout': 60,
-    'orm': 'default',
-    'queue_limit': 50,
-    'save_limit': 250
-}
+
+# CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+
+# Q_CLUSTER = {
+#     'name': 'chat-app',
+#     'workers': 2,
+#     'timeout': 60,
+#     'orm': 'default',
+#     'queue_limit': 50,
+#     'save_limit': 250
+# }
 
 
 ASGI_APPLICATION = 'chat_app.asgi.application'

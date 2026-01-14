@@ -1,25 +1,30 @@
 from .models import Notification
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from celery import shared_task
+from django.contrib.auth import get_user_model
 
 
+@shared_task
 def send_unseen_notification():
-    unseen_notification = Notification.objects.filter(is_read=False)
+    # Get user who have unread notification
+    User = get_user_model()
+    users_with_unread = User.objects.filter(
+        notification__is_read=False).distinct()
     channel_layer = get_channel_layer()
-    if unseen_notification.exists():
+    for user in users_with_unread:
+        count = Notification.objects.filter(
+            recipient=user, is_read=False).count()
+        group_name = f"notify_{user.id}"
 
-        print("Notifying User")
-        count = 0
-        group_name = ""
-        for notification in unseen_notification:
-            print(f"sending to ------------{notification.recipient.username}")
-            group_name = f"notify_{notification.recipient.id}"
-            print(f'---------{group_name}')
-            count += 1
-        print(count)
+        print(
+            f"Actually sending to {user.username} (ID: {user.id}) with count: {count}")
+
         reminder_context = {
             'message': f'You have {count} unseen messages'
         }
+
+        # This MUST be inside the loop to notify every user
         async_to_sync(channel_layer.group_send)(
             group_name,
             {
